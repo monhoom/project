@@ -1,0 +1,116 @@
+#================================================== Frames ===========================================================#
+
+from tkinter import *
+root = Tk()
+root.title("Trade Calculator by 'Monhoo'")
+
+tradeplanner = Frame(root, bd=5, relief=RIDGE)
+tradeplanner.grid(row=0, column=0)
+
+#================================================= Variables =========================================================#
+
+cur_balance = StringVar()
+entry = StringVar()
+stop = StringVar()
+target = StringVar()
+sug_size = StringVar()
+
+#================================================== Labels ===========================================================#
+
+balancelabel = Label(tradeplanner, text='Balance', font=('Helvetica', 10, 'bold', 'italic')).grid(row=9, column=0)
+entrylabel = Label(tradeplanner, text='Entry', font=('Helvetica', 10, 'bold', 'italic')).grid(row=9, column=1)
+stoplabel = Label(tradeplanner, text='Stop', font=('Helvetica', 10, 'bold', 'italic')).grid(row=9, column=2)
+exitlabel = Label(tradeplanner, text='Exit', font=('Helvetica', 10, 'bold', 'italic')).grid(row=9, column=3)
+riskablelabel = Label(tradeplanner, text='Riskable $ : ').grid(row=0, column=0, sticky=E)
+profitpercentlabel = Label(tradeplanner, text='Profit in % : ').grid(row=1, column=0, sticky=E)
+profitdollarlabel = Label(tradeplanner, text='Profit in $ : ').grid(row=2, column=0, sticky=E)
+rrlabel = Label(tradeplanner, text='Risk to Reward : ', font=('Helvetica', 10, 'bold')).grid(row=3, column=0, sticky=E)
+rr1label = Label(tradeplanner, text='1RR : ').grid(row=4, column=0, sticky=E)
+rr2label = Label(tradeplanner, text='2RR : ', font=('Helvetica', 10, 'bold')).grid(row=5, column=0, sticky=E)
+rr3label = Label(tradeplanner, text='3RR : ').grid(row=6, column=0, sticky=E)
+rr4label = Label(tradeplanner, text='4RR : ').grid(row=7, column=0, sticky=E)
+sugsizelabel = Label(tradeplanner, text='Suggested SIZE : ', font=('Helvetica', 10, 'bold')).grid(row=8, column=0, sticky=E)
+
+#================================================== Entries ==========================================================#
+
+balanceentry = Entry(tradeplanner, textvariable=cur_balance, bd=2, relief=SUNKEN).grid(row=10, column=0)
+entryentry = Entry(tradeplanner, textvariable=entry, bd=2, relief=SUNKEN).grid(row=10, column=1)
+stopentry = Entry(tradeplanner, textvariable=stop, bd=2, relief=SUNKEN).grid(row=10, column=2)
+exitentry = Entry(tradeplanner, textvariable=target, bd=2, relief=SUNKEN).grid(row=10, column=3)
+riskableentry = Entry(tradeplanner, state=DISABLED).grid(row=0, column=1)
+profitpercententry = Entry(tradeplanner, state=DISABLED).grid(row=1, column=1)
+profitdollarentry = Entry(tradeplanner, state=DISABLED).grid(row=2, column=1)
+rrentry = Entry(tradeplanner, state=DISABLED).grid(row=3, column=1)
+rr1entry = Entry(tradeplanner, state=DISABLED).grid(row=4, column=1)
+rr2entry = Entry(tradeplanner, state=DISABLED).grid(row=5, column=1)
+rr3entry = Entry(tradeplanner, state=DISABLED).grid(row=6, column=1)
+rr4entry = Entry(tradeplanner, state=DISABLED).grid(row=7, column=1)
+sugsizeentry = Entry(tradeplanner, state=DISABLED).grid(row=8, column=1)
+
+#================================================ Functions ==========================================================#
+
+entry = 15000
+stop = 14000
+target = 17000
+cur_balance = 1000
+risk_tol = 0.05
+riskable = cur_balance * risk_tol
+market_enter = True
+market_exit = False
+if market_enter:
+    enter_fee = 0.0004
+else:
+    enter_fee = 0.0002
+if market_exit:
+    exit_fee = 0.0004
+else:
+    exit_fee = 0.0002
+
+
+def size_calculator():  #Takes: entry, stop, riskable arguments
+    if entry > stop:
+        result = ((riskable - (entry * (riskable / (entry - stop)) * enter_fee) - (
+                    stop * (riskable / (entry - stop)) * exit_fee)) / (entry - stop))
+    elif stop > entry:
+        result = ((riskable - (entry * (riskable / (stop - entry)) * enter_fee) - (
+                    stop * (riskable / (stop - entry)) * exit_fee)) / (stop - entry))
+    return result
+
+
+sug_size = size_calculator()
+
+
+def profit_calculator():  #Takes: entry, target, sug_size, cur_balance arguments
+    if entry > stop:
+        result = ((target - entry - (target * exit_fee + entry * enter_fee)) * sug_size) / cur_balance
+    elif stop > entry:
+        result = ((entry - target - (target * exit_fee + entry * enter_fee)) * sug_size) / cur_balance
+    return result
+
+
+def risktoreward():
+    result = profit_calculator() / risk_tol
+    return result
+
+
+def rr1(rr=1):  #Takes: entry, riskable, sug_size arguments
+    if entry > stop:
+        result = entry * (1 + enter_fee) + (riskable / sug_size) * rr + (entry + (riskable / sug_size) * rr) * exit_fee
+    elif stop > entry:
+        result = entry * (1 - enter_fee) - (riskable / sug_size) * rr - (entry + (riskable / sug_size) * rr) * exit_fee
+    return result
+
+print(size_calculator())
+print(f"Profit = {float('%.3f' % profit_calculator()) * 100}")
+print(f"RR = {risktoreward()}")
+for i in range(1, 5):
+    print(f"{i} RR = {'%.0f' % rr1(i)}")
+print(f"Size = {float('%.3f' % size_calculator())}")
+
+#================================================ Buttons ============================================================#
+
+entrycheck = Checkbutton(tradeplanner, text='Market bought', font=('Helvetica', 9, 'bold')).grid(row=11, column=1, sticky=W)
+exitcheck = Checkbutton(tradeplanner, text='Market sold', font=('Helvetica', 9, 'bold')).grid(row=12, column=1, sticky=W)
+calc_button = Button(tradeplanner, text='Calculate').grid(row=11, column=2, rowspan=2, pady=10)
+
+root.mainloop()
